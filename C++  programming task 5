@@ -1,0 +1,164 @@
+TASK 5
+IMAGE PROCESSING TOOL
+Build a tool that allows users to perform various image processing operations
+like resizing, cropping, and filtering.
+Load Image: Allow users to load an image.
+Display Image: Display the loaded image in the application.
+Image Filters: Implement basic image filters like grayscale, blur, and
+sharpen.
+Color Adjustment: Allow users to adjust image colors, brightness,
+and contrast.
+Crop and Resize: Provide options to crop and resize the image.
+Image Saving: Enable users to save the processed image.
+User Interface: Design a user-friendly interface for easy interaction
+
+#include <opencv2/opencv.hpp>
+#include <iostream>
+#include <string>
+
+// Function to apply grayscale filter
+cv::Mat applyGrayscale(const cv::Mat &image) {
+    cv::Mat result;
+    cv::cvtColor(image, result, cv::COLOR_BGR2GRAY);
+    return result;
+}
+
+// Function to apply blur filter
+cv::Mat applyBlur(const cv::Mat &image, int kernel_size) {
+    cv::Mat result;
+    cv::blur(image, result, cv::Size(kernel_size, kernel_size));
+    return result;
+}
+
+// Function to apply sharpen filter
+cv::Mat applySharpen(const cv::Mat &image) {
+    cv::Mat result;
+    cv::Mat kernel = (cv::Mat_<float>(3,3) <<  0, -1,  0,
+                                               -1,  5, -1,
+                                                0, -1,  0);
+    cv::filter2D(image, result, image.depth(), kernel);
+    return result;
+}
+
+// Function to adjust brightness and contrast
+cv::Mat adjustBrightnessContrast(const cv::Mat &image, double alpha, int beta) {
+    cv::Mat result;
+    image.convertTo(result, -1, alpha, beta);  // alpha = contrast, beta = brightness
+    return result;
+}
+
+// Function to crop the image
+cv::Mat cropImage(const cv::Mat &image, int x, int y, int width, int height) {
+    cv::Rect roi(x, y, width, height);
+    return image(roi);
+}
+
+// Function to resize the image
+cv::Mat resizeImage(const cv::Mat &image, int width, int height) {
+    cv::Mat result;
+    cv::resize(image, result, cv::Size(width, height));
+    return result;
+}
+
+// Function to save the image
+void saveImage(const cv::Mat &image, const std::string &filename) {
+    cv::imwrite(filename, image);
+}
+
+// Main function to interact with the user
+int main() {
+    std::string filename;
+    std::cout << "Enter the image filename: ";
+    std::cin >> filename;
+    
+    // Load the image
+    cv::Mat image = cv::imread(filename);
+    if (image.empty()) {
+        std::cerr << "Error: Unable to load image." << std::endl;
+        return -1;
+    }
+
+    cv::Mat processedImage;
+    int choice;
+    
+    while (true) {
+        // Display menu to the user
+        std::cout << "\nImage Processing Tool\n";
+        std::cout << "1. Display Image\n";
+        std::cout << "2. Apply Grayscale Filter\n";
+        std::cout << "3. Apply Blur Filter\n";
+        std::cout << "4. Apply Sharpen Filter\n";
+        std::cout << "5. Adjust Brightness/Contrast\n";
+        std::cout << "6. Crop Image\n";
+        std::cout << "7. Resize Image\n";
+        std::cout << "8. Save Image\n";
+        std::cout << "9. Exit\n";
+        std::cout << "Enter your choice: ";
+        std::cin >> choice;
+
+        switch (choice) {
+            case 1:
+                cv::imshow("Image", image);
+                cv::waitKey(0);
+                break;
+            case 2:
+                processedImage = applyGrayscale(image);
+                cv::imshow("Grayscale", processedImage);
+                cv::waitKey(0);
+                break;
+            case 3:
+                int blurKernel;
+                std::cout << "Enter blur kernel size (odd number): ";
+                std::cin >> blurKernel;
+                processedImage = applyBlur(image, blurKernel);
+                cv::imshow("Blurred", processedImage);
+                cv::waitKey(0);
+                break;
+            case 4:
+                processedImage = applySharpen(image);
+                cv::imshow("Sharpened", processedImage);
+                cv::waitKey(0);
+                break;
+            case 5:
+                double alpha;
+                int beta;
+                std::cout << "Enter contrast (alpha): ";
+                std::cin >> alpha;
+                std::cout << "Enter brightness (beta): ";
+                std::cin >> beta;
+                processedImage = adjustBrightnessContrast(image, alpha, beta);
+                cv::imshow("Adjusted", processedImage);
+                cv::waitKey(0);
+                break;
+            case 6:
+                int x, y, width, height;
+                std::cout << "Enter crop coordinates (x y width height): ";
+                std::cin >> x >> y >> width >> height;
+                processedImage = cropImage(image, x, y, width, height);
+                cv::imshow("Cropped", processedImage);
+                cv::waitKey(0);
+                break;
+            case 7:
+                int newWidth, newHeight;
+                std::cout << "Enter new dimensions (width height): ";
+                std::cin >> newWidth >> newHeight;
+                processedImage = resizeImage(image, newWidth, newHeight);
+                cv::imshow("Resized", processedImage);
+                cv::waitKey(0);
+                break;
+            case 8:
+                std::string saveFileName;
+                std::cout << "Enter filename to save the image: ";
+                std::cin >> saveFileName;
+                saveImage(processedImage, saveFileName);
+                std::cout << "Image saved as " << saveFileName << std::endl;
+                break;
+            case 9:
+                return 0;
+            default:
+                std::cout << "Invalid choice. Please try again." << std::endl;
+        }
+    }
+
+    return 0;
+}
